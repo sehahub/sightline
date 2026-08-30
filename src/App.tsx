@@ -340,6 +340,12 @@ function Splash({
         Resolution runs on the real TypeScript compiler, in your browser. Your code is never
         uploaded — there is no server to upload it to.
       </p>
+
+      {/* Shown only on narrow screens: the demo still runs, but a canvas of code
+          wants room, and it is fairer to say so than to let it disappoint. */}
+      <p className="narrow-note">
+        The canvas wants a wide screen. This works best on a desktop browser.
+      </p>
     </div>
   )
 }

@@ -96,6 +96,22 @@ button { font-family: inherit; cursor: pointer; }
 .error { color: #f7768e; margin-top: 18px; }
 .fine { margin-top: 40px; color: var(--muted); font-size: 12px; line-height: 1.6; }
 
+.narrow-note { display: none; }
+@media (max-width: 760px) {
+  .narrow-note {
+    display: block;
+    margin: 18px 0 0;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: #e0af68;
+    font-size: 12px;
+  }
+  .splash { padding: 24px 20px; }
+  .splash h1 { font-size: 28px; }
+  .tagline { font-size: 14px; }
+}
+
 /* ── Sidebar ────────────────────────────────────────────── */
 
 .sidebar {
