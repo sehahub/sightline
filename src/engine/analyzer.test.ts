@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { Analyzer } from './analyzer'
-import type { SourceFile } from './types'
+import { Analyzer, SUPPORTING_FILES, rankHits } from './analyzer'
+import type { SourceFile, SymbolHit } from './types'
 
 const MATH = `/** Adds two numbers. */
 export function add(a: number, b: number): number {
@@ -105,6 +105,53 @@ describe('search', () => {
 
   it('returns nothing for a blank query', () => {
     expect(analyzer().search('   ')).toEqual([])
+  })
+})
+
+describe('rankHits', () => {
+  const hit = (name: string, kind: string, matchKind = 'exact'): SymbolHit =>
+    ({ name, kind, containerName: null, file: '/a.ts', pos: 0, matchKind })
+
+  it('puts declarations ahead of properties that merely share the name', () => {
+    const ranked = rankHits([hit('parse', 'property'), hit('parse', 'function')])
+    expect(ranked.map((h) => h.kind)).toEqual(['function', 'property'])
+  })
+
+  it('puts a type declaration first of all', () => {
+    const ranked = rankHits([hit('P', 'variable'), hit('P', 'function'), hit('P', 'interface')])
+    expect(ranked.map((h) => h.kind)).toEqual(['interface', 'function', 'variable'])
+  })
+
+  it('ranks match quality above declaration kind', () => {
+    const ranked = rankHits([hit('parser', 'interface', 'substring'), hit('parse', 'property', 'exact')])
+    expect(ranked[0].name).toBe('parse')
+  })
+
+  it('prefers the shorter name when everything else ties', () => {
+    const ranked = rankHits([hit('parseVeryLongThing', 'function'), hit('parse', 'function')])
+    expect(ranked[0].name).toBe('parse')
+  })
+
+  it('is stable for an unknown kind rather than dropping it', () => {
+    expect(rankHits([hit('x', 'something-new')])).toHaveLength(1)
+  })
+
+  it('puts the implementation ahead of tests and benchmarks that share the name', () => {
+    const at = (file: string): SymbolHit => ({ ...hit('parse', 'function'), file })
+    const ranked = rankHits([
+      at('/packages/bench/parse.ts'),
+      at('/src/core/parse.test.ts'),
+      at('/src/core/parse.ts'),
+      at('/tests/parse.ts'),
+    ])
+    expect(ranked[0].file).toBe('/src/core/parse.ts')
+    expect(ranked.slice(1).every((h) => SUPPORTING_FILES.test(h.file))).toBe(true)
+  })
+
+  it('does not mistake ordinary names for test paths', () => {
+    for (const file of ['/src/latest/x.ts', '/src/contest.ts', '/src/benchmarking.ts']) {
+      expect(SUPPORTING_FILES.test(file)).toBe(false)
+    }
   })
 })
 

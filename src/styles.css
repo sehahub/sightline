@@ -153,8 +153,21 @@ button { font-family: inherit; cursor: pointer; }
 
 .outline { padding-left: 14px; border-left: 1px solid var(--soft); margin-left: 17px; }
 
-.hit-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.hit-file { margin-left: auto; color: var(--muted); font-size: 11px; flex: none; }
+/* The symbol name is what the reader is looking for, so it keeps the room and
+   the path gives way — without min-width:0 a deep path collapses it to nothing. */
+.hit-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hit-file {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 48%;
+  margin-left: auto;
+  padding-left: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .container { color: var(--muted); }
 
 .kind {

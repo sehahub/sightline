@@ -161,6 +161,40 @@ function isInTypePosition(id: ts.Node): boolean {
   return false
 }
 
+const MATCH_ORDER = ['exact', 'prefix', 'substring', 'camelCase']
+
+/**
+ * How much a hit is worth opening. A declaration beats a mention: searching a
+ * large project for a common word otherwise buries the four functions that
+ * define it under thirty object-literal properties that merely use the name.
+ */
+const KIND_ORDER: Record<string, number> = {
+  class: 0, interface: 0, type: 0, enum: 0, module: 0,
+  function: 1, method: 1, constructor: 1, getter: 2, setter: 2,
+  variable: 3, const: 3, let: 3, var: 3,
+  property: 5, parameter: 6,
+}
+
+/** Tests, benchmarks and examples are worth reading, just not first. */
+export const SUPPORTING_FILES = /(^|\/)(tests?|__tests__|bench(marks?)?|examples?|fixtures?|e2e)(\/|$)|\.(test|spec|bench)\.[cm]?[jt]sx?$/
+
+export function rankHits(hits: SymbolHit[]): SymbolHit[] {
+  const rank = (h: SymbolHit) => {
+    const match = MATCH_ORDER.indexOf(h.matchKind)
+    return [
+      match < 0 ? MATCH_ORDER.length : match,
+      KIND_ORDER[h.kind] ?? 4,
+      SUPPORTING_FILES.test(h.file) ? 1 : 0,
+    ] as const
+  }
+  return [...hits].sort((a, b) => {
+    const [am, ak, as] = rank(a)
+    const [bm, bk, bs] = rank(b)
+    return am - bm || ak - bk || as - bs ||
+      a.name.length - b.name.length || a.file.localeCompare(b.file)
+  })
+}
+
 function tokenAt(sf: ts.SourceFile, pos: number): ts.Node | null {
   let found: ts.Node | null = null
   const visit = (n: ts.Node) => {
@@ -210,10 +244,10 @@ export class Analyzer {
     return this.program.getSourceFile(normalizePath(file))
   }
 
-  /** Fuzzy symbol search across the whole project. */
+  /** Fuzzy symbol search across the whole project, most useful hits first. */
   search(query: string, limit = 40): SymbolHit[] {
     if (!query.trim()) return []
-    const items = this.service.getNavigateToItems(query, limit, undefined, true)
+    const items = this.service.getNavigateToItems(query, limit * 3, undefined, true)
     const out: SymbolHit[] = []
     for (const it of items) {
       if (!this.files.has(it.fileName)) continue
@@ -226,7 +260,7 @@ export class Analyzer {
         matchKind: it.matchKind,
       })
     }
-    return out
+    return rankHits(out).slice(0, limit)
   }
 
   /** Declarations in a file, in source order. */

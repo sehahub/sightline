@@ -6,6 +6,9 @@ const KIND_LABEL: Record<string, string> = {
   module: 'mod',
 }
 
+/** Deep paths crowd out the symbol name, and their last segments identify them. */
+const tail = (path: string) => path.split('/').slice(-2).join('/')
+
 interface Props {
   projectName: string
   files: string[]
@@ -56,7 +59,7 @@ export function Sidebar({
               {hit.containerName && <span className="container">{hit.containerName}.</span>}
               {hit.name}
             </span>
-            <span className="hit-file">{hit.file.replace(/^\//, '')}</span>
+            <span className="hit-file" title={hit.file}>{tail(hit.file)}</span>
           </button>
         ))}
 
