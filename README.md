@@ -2,6 +2,8 @@
 
 Read a codebase as a chain of functions, not a stack of tabs.
 
+**[sightline.sehahub.info](https://sightline.sehahub.info/)** — open the demo, no install, no sign-up.
+
 ![Three functions open on the Sightline canvas, each wired to the call site that opened it](docs/screenshot.png)
 
 Open one function. Click a call inside it, and the callee lands beside it — wired back to

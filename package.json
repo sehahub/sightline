@@ -34,7 +34,7 @@
     "type": "git",
     "url": "git+https://github.com/sehahub/sightline.git"
   },
-  "homepage": "https://github.com/sehahub/sightline#readme",
+  "homepage": "https://sightline.sehahub.info/",
   "keywords": [
     "typescript",
     "code-navigation",
