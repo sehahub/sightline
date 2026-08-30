@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import type { ConfigFile } from './engine/tsconfig'
 import type { CallerHit, Card, CardLink, SourceFile, SymbolHit } from './engine/types'
 import { AnalyzerClient } from './worker/client'
 import { Canvas } from './app/Canvas'
@@ -43,7 +44,10 @@ export default function App() {
     return () => c.dispose()
   }, [])
 
-  const loadProject = useCallback(async (name: string, sources: SourceFile[], skipped = 0) => {
+  const loadProject = useCallback(async (
+    name: string, sources: SourceFile[], configs: ConfigFile[] = [],
+    packages: ConfigFile[] = [], skipped = 0,
+  ) => {
     if (!client) return null
     if (sources.length === 0) {
       setStatus({ kind: 'error', message: 'No TypeScript or JavaScript files found in that folder.' })
@@ -55,11 +59,17 @@ export default function App() {
     setQuery('')
     setOpenFile(null)
     try {
-      const loaded = await client.call('load', { files: sources, libsUrl: LIBS_URL })
+      const loaded = await client.call('load', { files: sources, configs, packages, libsUrl: LIBS_URL })
       setFiles(loaded.files)
       setProjectName(name)
       setStatus({ kind: 'ready' })
-      setNotice(skipped > 0 ? `${skipped} files skipped — project exceeds the size limit.` : null)
+      const warnings = [
+        skipped > 0 ? `${skipped} files skipped — project exceeds the size limit.` : null,
+        loaded.configProblems.length
+          ? `${loaded.configProblems.length} tsconfig files could not be read; aliased imports may not resolve.`
+          : null,
+      ].filter(Boolean)
+      setNotice(warnings.length ? warnings.join(' ') : null)
       return loaded.files
     } catch (err) {
       setStatus({ kind: 'error', message: err instanceof Error ? err.message : String(err) })
@@ -173,7 +183,7 @@ export default function App() {
   const openFolder = useCallback(async () => {
     if (canPickDirectory()) {
       const picked = await pickDirectory()
-      if (picked) await loadProject(picked.name, picked.files, picked.skipped)
+      if (picked) await loadProject(picked.name, picked.files, picked.configs, picked.packages, picked.skipped)
     } else {
       fileInputRef.current?.click()
     }
@@ -231,7 +241,7 @@ export default function App() {
           const list = e.target.files
           if (!list?.length) return
           const project = await readFileList(list)
-          await loadProject(project.name, project.files, project.skipped)
+          await loadProject(project.name, project.files, project.configs, project.packages, project.skipped)
         }}
       />
 

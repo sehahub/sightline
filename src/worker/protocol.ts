@@ -1,3 +1,4 @@
+import type { ConfigFile } from '../engine/tsconfig'
 import type { Card, CallerHit, SourceFile, SymbolHit } from '../engine/types'
 
 /**
@@ -5,7 +6,8 @@ import type { Card, CallerHit, SourceFile, SymbolHit } from '../engine/types'
  * response type of every operation stay tied together on both sides.
  */
 export interface Ops {
-  load: (p: { files: SourceFile[]; libsUrl: string }) => { files: string[] }
+  load: (p: { files: SourceFile[]; configs: ConfigFile[]; packages: ConfigFile[]; libsUrl: string })
+    => { files: string[]; configProblems: string[] }
   search: (p: { query: string }) => SymbolHit[]
   outline: (p: { file: string }) => SymbolHit[]
   card: (p: { file: string; pos: number }) => Card | null

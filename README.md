@@ -39,12 +39,22 @@ editor resolves:
   `greet` in the file that declares it.
 - **Callers work in reverse.** Any card can ask who calls it, and the answer opens to the
   *left*, so a chain assembled from either end still reads in call order.
+- **Your project's own import conventions are honoured.** `tsconfig.json` aliases
+  (`@/lib/thing`), a bare `baseUrl`, ESM-style `./thing.js` imports of `./thing.ts`, and
+  workspace packages that import each other by name (`@acme/ui`) all resolve.
 
 The standard library is bundled for a measured reason: with no `lib.d.ts` loaded, three of
 four everyday patterns (`.map()`, `await`, spread) lose the receiver's type and stop
 resolving. DOM definitions are deliberately excluded — they cost 3 MB and resolve nothing
 extra, since DOM declarations live outside your project and are reported as external either
 way. The bundle is 57 files, 50 KB gzipped.
+
+None of this is assumed. Run over [zod](https://github.com/colinhacks/zod) — 497 files,
+3.2 MB — the engine indexes in ~600 ms and builds a card in under a millisecond. Counting
+unresolved links whose name the project itself declares, which is the shape a real
+navigation failure takes, honouring tsconfig and workspace packages took that number from
+280 to 15 — and every one of the 15 turned out to be a standard-library call like
+`toString` that zod happens to also declare a name for.
 
 ## Running it
 
@@ -68,7 +78,8 @@ Worth knowing before you judge a result:
 - **TypeScript and JavaScript only.** The resolution quality comes from the TypeScript
   compiler, and that is what it understands.
 - **`node_modules` is not loaded.** Symbols from your dependencies resolve as *external* and
-  are shown dimmed rather than opened. Your own code is fully resolved.
+  are shown dimmed rather than opened. Your own code is fully resolved, including across
+  workspace packages.
 - **`.d.ts` files are skipped** when reading a folder, along with the usual build and vendor
   directories.
 - **Large projects are capped** at 4000 files / 24 MB, and the canvas tells you when it
@@ -78,6 +89,7 @@ Worth knowing before you judge a result:
 
 ```
 src/engine/    host.ts       in-memory LanguageServiceHost (never delegates to ts.sys)
+               tsconfig.ts   aliases and workspace packages, so imports resolve
                analyzer.ts   cards, links, callers, search
 src/worker/    the language service, off the UI thread
 src/app/       canvas, cards, layout and highlight segmentation

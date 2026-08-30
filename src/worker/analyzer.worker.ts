@@ -15,11 +15,11 @@ async function fetchLibs(url: string): Promise<Map<string, string>> {
 }
 
 const ops: { [K in keyof Ops]: (p: Parameters<Ops[K]>[0]) => Promise<ReturnType<Ops[K]>> } = {
-  async load({ files, libsUrl }) {
-    analyzer = new Analyzer(files, await fetchLibs(libsUrl))
+  async load({ files, configs, packages, libsUrl }) {
+    analyzer = new Analyzer(files, await fetchLibs(libsUrl), configs, packages)
     // Force the program to build here so the first card request is already warm.
     analyzer.program.getTypeChecker()
-    return { files: analyzer.paths() }
+    return { files: analyzer.paths(), configProblems: analyzer.configProblems }
   },
   async search({ query }) {
     return required().search(query)

@@ -1,5 +1,6 @@
 import ts from 'typescript'
 import { createHost, normalizePath, type VfsHost } from './host'
+import { readPathMapping, type ConfigFile } from './tsconfig'
 import type {
   Card, CardLink, CallerHit, LinkRole, SourceFile, SymbolHit, Token, TokenClass,
 } from './types'
@@ -175,10 +176,23 @@ export class Analyzer {
   private host: VfsHost
   private service: ts.LanguageService
   private files: Map<string, string>
+  /** tsconfig files that were found but could not be read. */
+  readonly configProblems: string[]
 
-  constructor(sources: SourceFile[], libs: Map<string, string> = new Map()) {
+  constructor(
+    sources: SourceFile[],
+    libs: Map<string, string> = new Map(),
+    configs: ConfigFile[] = [],
+    packages: ConfigFile[] = [],
+  ) {
     this.files = new Map(sources.map((s) => [normalizePath(s.path), s.text]))
-    this.host = createHost({ files: this.files, libs })
+    const mapping = readPathMapping(configs, this.files, packages)
+    this.configProblems = mapping.problems
+    this.host = createHost({
+      files: this.files,
+      libs,
+      aliases: { baseUrl: mapping.baseUrl, paths: mapping.paths },
+    })
     this.service = ts.createLanguageService(this.host, ts.createDocumentRegistry())
   }
 

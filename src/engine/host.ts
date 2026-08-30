@@ -13,6 +13,8 @@ export interface HostFiles {
   files: Map<string, string>
   /** Lib file name ("lib.es2022.d.ts") to text. An empty map means noLib. */
   libs: Map<string, string>
+  /** `baseUrl`/`paths` from the project's tsconfig, so aliased imports resolve. */
+  aliases?: { baseUrl?: string; paths?: ts.MapLike<string[]> }
 }
 
 export const LIB_DIR = '/__lib__'
@@ -45,7 +47,7 @@ export interface VfsHost extends ts.LanguageServiceHost {
   paths(): string[]
 }
 
-export function createHost({ files, libs }: HostFiles): VfsHost {
+export function createHost({ files, libs, aliases }: HostFiles): VfsHost {
   const versions = new Map<string, number>()
   for (const p of files.keys()) versions.set(p, 1)
 
@@ -96,6 +98,10 @@ export function createHost({ files, libs }: HostFiles): VfsHost {
       // Reading unfamiliar code should never be blocked by someone else's
       // strictness settings, and looser checking keeps resolution cheaper.
       strict: false,
+      // Everything above is ours to decide; these two belong to the project
+      // being read, and without them aliased imports resolve to nothing.
+      baseUrl: aliases?.baseUrl,
+      paths: aliases?.paths,
     }),
     getDefaultLibFileName: () => libPath(DEFAULT_LIB),
     fileExists: (f) => lookup(f) !== undefined,
