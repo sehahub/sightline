@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sightline",
+  "compatibility_date": "2026-08-30",
+
+  // Assets-only Worker: there is no server side to this app. Everything —
+  // parsing, symbol resolution, rendering — happens in the visitor's browser.
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}

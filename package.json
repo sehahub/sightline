@@ -1,0 +1,46 @@
+{
+  "name": "sightline",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "npm run libs && vite",
+    "build": "npm run libs && tsc -b && vite build",
+    "libs": "node scripts/build-libs.mjs",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "typescript": "~6.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.1.0",
+    "oxlint": "^1.79.0",
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11",
+    "wrangler": "^4.127.1"
+  },
+  "description": "Read a codebase as a chain of functions on one canvas. Real TypeScript resolution, entirely in the browser.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sehahub/sightline.git"
+  },
+  "homepage": "https://github.com/sehahub/sightline#readme",
+  "keywords": [
+    "typescript",
+    "code-navigation",
+    "call-graph",
+    "code-reading",
+    "code-bubbles",
+    "language-service"
+  ]
+}
