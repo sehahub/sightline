@@ -9,8 +9,8 @@
     "libs": "node scripts/build-libs.mjs",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "npm run libs && vitest run",
+    "test:watch": "npm run libs && vitest",
     "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
